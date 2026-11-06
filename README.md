@@ -13,6 +13,9 @@ editor support. No optional Node.js runtime, application Python environment,
 Docker tooling, Kubernetes, Terragrunt or TFLint. Azure CLI and VS Code extensions
 still bring their own required runtime dependencies.
 
+The dev container additionally includes PowerShell, PSScriptAnalyzer and the
+PowerShell VS Code extension. These are not installed by the local WSL bootstrap.
+
 This is a development environment, not a deployment pipeline. The Actions extension
 helps edit workflows; GitHub CLI can inspect and trigger workflows online. No local
 Actions runner or Docker-dependent `act` installation is included.
@@ -112,6 +115,18 @@ its token or commit one. Azure authentication is separate:
 az login --use-device-code
 ```
 
+PowerShell and PSScriptAnalyzer are installed once at image build time using the
+official PowerShell dev container feature. The module is installed for all users;
+no module installation or update runs when opening a terminal. Its VS Code
+extension is included by the feature. Rebuild an existing container to add them.
+The creation hook verifies that the module imports and can analyze a small script
+without network access. To rerun that check or analyze your own scripts:
+
+```bash
+pwsh -NoLogo -NoProfile -NonInteractive -File scripts/check-powershell.ps1
+pwsh -NoProfile -Command 'Invoke-ScriptAnalyzer -Path ./scripts -Recurse'
+```
+
 Local WSL users can also sign into GitHub explicitly when online:
 
 ```bash
@@ -190,7 +205,8 @@ fixed version set. Feature major tags and the base-image tag can change; existin
 WSL installations and stopped Codespaces retain their installed tools until updated.
 If reproducibility matters, pin the base image by digest, feature versions and
 individual tool versions, and track corresponding WSL package versions. Codespaces
-and WSL are matching toolsets, not guaranteed byte-identical installations.
+and WSL share the core infrastructure toolset, not guaranteed byte-identical
+installations; PowerShell/PSScriptAnalyzer are dev-container-only additions.
 
 To update WSL tools deliberately while online, rerun the installer. For Codespaces,
 rebuild the container to resolve current versions. Neither process upgrades tools
